@@ -10,8 +10,18 @@ project(${PACKAGE_NAME} VERSION ${PACKAGE_VERSION} LANGUAGES C CXX)
 
 option(BUILD_SHARED_LIBS "" OFF)
 option(ENABLE_LLCP1_3 "enable LLCP1.3 (secured P2P). requires OPENSSLDIR to be set." OFF)
-set(ACTIVE_TML "I2C" CACHE STRING "choose which type of TML to have enabled")
+set(ACTIVE_TML "ALT" CACHE STRING "choose which type of TML to have enabled")
 set_property(CACHE ACTIVE_TML PROPERTY STRINGS ABEND ALT I2C LPCUSBSIO)
+
+if(ENABLE_LLCP1_3)
+    message(FATAL_ERROR "LLCP 1.3 is currently not supported.")
+endif()
+
+foreach(_tml ABEND LPCUSBSIO)
+    if(ACTIVE_TML STREQUAL ${_tml})
+        message(FATAL_ERROR "The chosen ACTIVE_TML '${_tml}' is not supported. Only ALT and I2C are currently supported.")
+    endif()
+endforeach()
 
 include(CheckIncludeFile)
 check_include_file("dlfcn.h" HAVE_DLFCN_H)
@@ -127,9 +137,7 @@ target_compile_definitions(${PACKAGE_NAME} PRIVATE
     NXP_NFC_NATIVE_ENABLE_HCE=TRUE
     PH_NCI_NXP_HAL_ENABLE_FW_DOWNLOAD=FALSE
     NFC_NXP_LLCP_SECURED_P2P=FALSE
-    $<$<STREQUAL:${ACTIVE_TML},"LPCUSBSIO">:PHFL_TML_LPCUSBSIO>
-    $<$<STREQUAL:${ACTIVE_TML},"ABEND">:PHFL_TML_ABEND>
-    $<$<STREQUAL:${ACTIVE_TML},"ALT">:PHFL_TML_ALT_NFC>
+    $<$<STREQUAL:${ACTIVE_TML},ALT>:PHFL_TML_ALT_NFC>
 )
 
 find_package(Threads)
@@ -235,7 +243,7 @@ target_sources(${PACKAGE_NAME} PRIVATE
     src/libnfc-nci/adaptation/CrcChecksum.cpp
 )
 
-if(ACTIVE_TML STREQUAL I2C)
+if(ACTIVE_TML STREQUAL ALT OR ACTIVE_TML STREQUAL I2C)
     target_include_directories(${PACKAGE_NAME} PRIVATE
         src/halimpl/include
         src/halimpl/pn54x/utils
