@@ -124,6 +124,7 @@ add_library(${PACKAGE_NAME})
 
 set_target_properties(${PACKAGE_NAME} PROPERTIES
     POSITION_INDEPENDENT_CODE true
+    OUTPUT_NAME nfc_nci_linux
 )
 
 target_compile_options(${PACKAGE_NAME} PRIVATE
