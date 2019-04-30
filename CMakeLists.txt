@@ -113,48 +113,49 @@ foreach(_type int8_t int16_t int32_t uint8_t uint16_t uint32_t uint64_t size_t s
     endif()
 endforeach()
 
-configure_file(cmake/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/config.h)
+configure_file(cmake/config.h.in ${PROJECT_BINARY_DIR}/config.h)
 
 if(ENABLE_LLCP1_3)
 else()
     message(STATUS "LLCP1.3 support is disabled (no secure P2P)")
 endif()
 
-add_library(${PACKAGE_NAME})
+add_library(${PROJECT_NAME})
 
-set_target_properties(${PACKAGE_NAME} PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
     POSITION_INDEPENDENT_CODE true
     OUTPUT_NAME nfc_nci_linux
 )
 
-target_compile_options(${PACKAGE_NAME} PRIVATE
+target_compile_options(${PROJECT_NAME} PRIVATE
     -w
 )
 
-target_compile_definitions(${PACKAGE_NAME} PRIVATE
+target_compile_definitions(${PROJECT_NAME} PRIVATE
     HAVE_CONFIG_H
     NFC_NXP_NOT_OPEN_INCLUDED=TRUE
     NXP_HW_SELF_TEST
     NXP_NFC_NATIVE_ENABLE_HCE=TRUE
     PH_NCI_NXP_HAL_ENABLE_FW_DOWNLOAD=FALSE
     NFC_NXP_LLCP_SECURED_P2P=FALSE
+    $<$<CONFIG:Debug>:NFC_CFG_DEBUG=0x01>
     $<$<STREQUAL:${ACTIVE_TML},ALT>:PHFL_TML_ALT_NFC>
 )
 
 find_package(Threads)
-target_link_libraries(${PACKAGE_NAME} PUBLIC
+target_link_libraries(${PROJECT_NAME} PUBLIC
     ${CMAKE_THREAD_LIBS_INIT}
     -ldl
     -lrt
 )
 
-file(GLOB_RECURSE PROJECT_HEADERS LIST_DIRECTORIES false "src/libnfc-nci/*.h")
-target_sources(${PACKAGE_NAME} PRIVATE
+file(GLOB_RECURSE PROJECT_HEADERS CONFIGURE_DEPENDS LIST_DIRECTORIES false "src/libnfc-nci/*.h")
+target_sources(${PROJECT_NAME} PRIVATE
     ${PROJECT_HEADERS}
 )
 
-target_include_directories(${PACKAGE_NAME} PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}/include
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${PROJECT_BINARY_DIR}
     src/libnfc-nci/include
     src/libnfc-nci/gki/ulinux
     src/libnfc-nci/gki/common
@@ -166,7 +167,7 @@ target_include_directories(${PACKAGE_NAME} PRIVATE
     src/libnfc-nci/hal/int
 )
 
-target_sources(${PACKAGE_NAME} PRIVATE
+target_sources(${PROJECT_NAME} PRIVATE
     src/libnfc-nci/nfa/rw/nfa_rw_main.c
     src/libnfc-nci/nfa/rw/nfa_rw_api.c
     src/libnfc-nci/nfa/rw/nfa_rw_act.c
@@ -245,7 +246,7 @@ target_sources(${PACKAGE_NAME} PRIVATE
 )
 
 if(ACTIVE_TML STREQUAL ALT OR ACTIVE_TML STREQUAL I2C)
-    target_include_directories(${PACKAGE_NAME} PRIVATE
+    target_include_directories(${PROJECT_NAME} PRIVATE
         src/halimpl/include
         src/halimpl/pn54x/utils
         src/halimpl/pn54x/inc
@@ -258,7 +259,7 @@ if(ACTIVE_TML STREQUAL ALT OR ACTIVE_TML STREQUAL I2C)
         src/halimpl/pn54x/core
         src/halimpl/pn54x/self-test
     )
-    target_sources(${PACKAGE_NAME} PRIVATE
+    target_sources(${PROJECT_NAME} PRIVATE
         src/halimpl/pn54x/tml/phDal4Nfc_messageQueueLib.c
         src/halimpl/pn54x/tml/phOsalNfc_Timer.c
         src/halimpl/pn54x/tml/i2c/phTmlNfc_i2c.c
@@ -279,9 +280,10 @@ if(ACTIVE_TML STREQUAL ALT OR ACTIVE_TML STREQUAL I2C)
     )
 endif()
 
-target_include_directories(${PACKAGE_NAME}
+target_include_directories(${PROJECT_NAME}
     PUBLIC
-        src/include
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/include>
     PRIVATE
         src/service/interface
         src/service/utils
@@ -289,7 +291,7 @@ target_include_directories(${PACKAGE_NAME}
         src/service/extns/src/common
         src/service/extns/src/mifare
 )
-target_sources(${PACKAGE_NAME} PRIVATE
+target_sources(${PROJECT_NAME} PRIVATE
     src/service/utils/Mutex.cpp
     src/service/utils/IntervalTimer.cpp
     src/service/utils/CondVar.cpp
@@ -310,4 +312,64 @@ target_sources(${PACKAGE_NAME} PRIVATE
     src/service/linux_nfc_factory_api.c
 )
 
-add_subdirectory(demoapp)
+add_executable(nfcDemoApp demoapp/main.c demoapp/tools.c demoapp/tools.h)
+target_include_directories(nfcDemoApp PRIVATE demoapp)
+target_link_libraries(nfcDemoApp PRIVATE ${PROJECT_NAME})
+target_compile_options(nfcDemoApp PRIVATE -w)
+set_target_properties(nfcDemoApp PROPERTIES BUILD_WITH_INSTALL_RPATH true)
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+set(CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/)
+
+install(
+    TARGETS nfcDemoApp
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(
+    EXPORT ${PROJECT_NAME}Targets
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CONFIG_INSTALL_DIR}
+)
+
+install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/src/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING
+    PATTERN "*.h"
+)
+
+install(
+    DIRECTORY conf/
+    DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}
+    FILES_MATCHING
+    PATTERN "*.conf"
+)
+
+write_basic_package_version_file(
+    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+    ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
+    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    INSTALL_DESTINATION ${CONFIG_INSTALL_DIR}
+)
+
+install(
+    FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    DESTINATION ${CONFIG_INSTALL_DIR}
+)
