@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 
 set(PACKAGE_NAME libnfc_nci_linux)
 set(PACKAGE ${PACKAGE_NAME})
