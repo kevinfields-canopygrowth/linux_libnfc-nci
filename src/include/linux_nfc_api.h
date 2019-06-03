@@ -331,6 +331,15 @@ typedef struct
     nfc_wifi_pairing_t  wifi;
 }nfc_handover_select_t;
 
+typedef struct
+{
+    char*        pI2CBus;
+    unsigned int i2cBusLength;
+    unsigned int i2cAddress;
+    unsigned int irq;
+    unsigned int ven;
+}nfcInitInfo_t;
+
 /**
  * \brief NFC Tag callback function structure definition.
  */
@@ -608,7 +617,7 @@ extern int nfcTag_transceive (unsigned int handle, unsigned char *tx_buffer, int
 * \brief initialize nfc stack.
 * \return 0 if success, otherwise failed.
 */
-extern int nfcManager_doInitialize ();
+extern int nfcManager_doInitialize (nfcInitInfo_t *pInitInfo);
 
 /**
 * \brief de-initialize nfc stack.

@@ -1333,7 +1333,7 @@ BOOLEAN nativeNfcManager_isNfcActive()
 ** Returns:         True if ok.
 **
 *******************************************************************************/
-INT32 nativeNfcManager_doInitialize ()
+INT32 nativeNfcManager_doInitialize (nfcInitInfo_t *pInitInfo)
 {
     NXPLOG_API_D ("%s: enter; NCI_VERSION=0x%02X",
         __FUNCTION__, NCI_VERSION);
@@ -1365,7 +1365,7 @@ INT32 nativeNfcManager_doInitialize ()
 
     NfcAdaptation& NfcAdaptInstance = NfcAdaptation::GetInstance();
 
-    NfcAdaptInstance.Initialize(); //start GKI, NCI task, NFC task
+    NfcAdaptInstance.Initialize(pInitInfo); //start GKI, NCI task, NFC task
     {
         SyncEventGuard guard (sNfaEnableEvent);
         tHAL_NFC_ENTRY* halFuncEntries = NfcAdaptInstance.GetHalEntryFuncs ();

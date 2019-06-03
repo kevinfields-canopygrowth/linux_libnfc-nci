@@ -147,11 +147,13 @@ NfcAdaptation& NfcAdaptation::GetInstance()
 ** Returns:     none
 **
 *******************************************************************************/
-void NfcAdaptation::Initialize ()
+void NfcAdaptation::Initialize (nfcInitInfo_t *pInitInfo)
 {
     const char* func = "NfcAdaptation::Initialize";
     NXPLOG_API_D("%s: enter", func);
     unsigned long num;
+
+    mpInitInfo = pInitInfo;
 
     if ( GetNumValue ( NAME_USE_RAW_NCI_TRACE, &num, sizeof ( num ) ) )
     {
@@ -424,7 +426,9 @@ void NfcAdaptation::HalOpen (tHAL_NFC_CBACK *p_hal_cback, tHAL_NFC_DATA_CBACK* p
     NXPLOG_API_D ("%s", func);
     mHalCallback = p_hal_cback;
     mHalDataCallback = p_data_cback;
-    phNxpNciHal_open (HalDeviceContextCallback, HalDeviceContextDataCallback);
+
+    NfcAdaptation &instance = NfcAdaptation::GetInstance();
+    phNxpNciHal_open (instance.mpInitInfo, HalDeviceContextCallback, HalDeviceContextDataCallback);
 }
 
 /*******************************************************************************

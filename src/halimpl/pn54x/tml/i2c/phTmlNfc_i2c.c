@@ -254,23 +254,23 @@ NFCSTATUS phTmlNfc_i2c_open_and_configure(pphTmlNfc_Config_t pConfig, void ** pL
     NXPLOG_TML_D("phTmlNfc_i2c_open_and_configure Alternative NFC\n");
     NXPLOG_TML_D( "NFC - Assign IO pins\n");
     // Assign IO pins
-    iInterruptFd = verifyPin( PIN_INT,    0, EDGE_RISING );
-    iEnableFd    = verifyPin( PIN_ENABLE, 1, EDGE_NONE   );
-    NXPLOG_TML_D( "NFCHW - open I2C bus - %s\n", I2C_BUS);
+    iInterruptFd = verifyPin( pConfig->irq,    0, EDGE_RISING );
+    iEnableFd    = verifyPin( pConfig->ven, 1, EDGE_NONE   );
+    NXPLOG_TML_D( "NFCHW - open I2C bus - %s\n", pConfig->pI2CBus);
 
     // I2C bus
-    iI2CFd = open( I2C_BUS, O_RDWR | O_NOCTTY);
+    iI2CFd = open( (const char*)pConfig->pI2CBus, O_RDWR | O_NOCTTY);
     if (iI2CFd < 0) {
-        NXPLOG_TML_E( "Could not open I2C bus '%s' (%s)", I2C_BUS, strerror(errno));
+        NXPLOG_TML_E( "Could not open I2C bus '%s' (%s)", pConfig->pI2CBus, strerror(errno));
         if ( iEnableFd    ) close(iEnableFd);
         if ( iInterruptFd ) close(iInterruptFd);
         return( NFCSTATUS_INVALID_DEVICE );
     }
 
-    NXPLOG_TML_D( "NFC - open I2C device - 0x%02x\n", I2C_ADDRESS);
+    NXPLOG_TML_D( "NFC - open I2C device - 0x%02x\n", pConfig->i2cAddress);
 
     // I2C slave address
-    if (ioctl(iI2CFd, I2C_SLAVE, I2C_ADDRESS) < 0) {
+    if (ioctl(iI2CFd, I2C_SLAVE, pConfig->i2cAddress) < 0) {
         NXPLOG_TML_E( "Cannot select I2C address (%s)\n", strerror(errno));
         if ( iEnableFd    ) close(iEnableFd);
         if ( iInterruptFd ) close(iInterruptFd);

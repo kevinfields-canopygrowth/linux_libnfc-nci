@@ -171,6 +171,11 @@ typedef struct phTmlNfc_Config
      *
      * This is the baudrate of the bus for communication between DH and PN54X */
     uint32_t dwBaudRate;
+
+    int8_t *pI2CBus;
+    uint8_t i2cAddress;
+    uint8_t irq;
+    uint8_t ven;
 } phTmlNfc_Config_t,*pphTmlNfc_Config_t;    /* pointer to phTmlNfc_Config_t */
 
 /*

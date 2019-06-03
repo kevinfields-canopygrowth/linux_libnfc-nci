@@ -51,6 +51,7 @@
 #include "rw_api.h"
 #include "nfc_hal_api.h"
 #include "gki.h"
+#include "linux_nfc_api.h"
 
 
 /*****************************************************************************
