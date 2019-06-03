@@ -511,7 +511,18 @@ CNxpNfcConfig& CNxpNfcConfig::GetInstance(unsigned long cfgtype)
 
         if( cfg_file_stat == -1 )
         {
+            struct stat st;
+
             strPath.assign(transport_config_path);
+            strPath += cfg_name;
+            cfg_file_stat = stat(strPath.c_str(), &st);
+        }
+
+        if( cfg_file_stat == -1 )
+        {
+            const char* home_dir = getenv("HOME");
+            strPath.assign(home_dir);
+            strPath += transport_config_path;
             strPath += cfg_name;
         }
 
