@@ -41,6 +41,7 @@
  *
  ******************************************************************************/
 #include <string.h>
+#include <stdlib.h>
 #include "nfa_api.h"
 #include "nfa_sys.h"
 #include "nfa_dm_int.h"

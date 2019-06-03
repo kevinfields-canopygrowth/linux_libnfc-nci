@@ -42,6 +42,10 @@ typedef unsigned long   UINT32;
 #include "nfc_target.h"
 #include "nfc_hal_api.h"
 
+extern "C" {
+#include "linux_nfc_api.h"
+}
+
 class ThreadMutex
 {
 public:
@@ -82,7 +86,7 @@ class NfcAdaptation
 {
 public:
     virtual ~NfcAdaptation();
-    void    Initialize();
+    void    Initialize(nfcInitInfo_t *pInitInfo);
     void    Configure();
     void    Finalize();
     static  NfcAdaptation& GetInstance();
@@ -95,10 +99,12 @@ private:
     static  ThreadMutex sLock;
     ThreadCondVar    mCondVar;
     tHAL_NFC_ENTRY   mHalEntryFuncs; // function pointers for HAL entry points
+    nfcInitInfo_t* mpInitInfo;
     static tHAL_NFC_CBACK* mHalCallback;
     static tHAL_NFC_DATA_CBACK* mHalDataCallback;
     static ThreadCondVar mHalOpenCompletedEvent;
     static ThreadCondVar mHalCloseCompletedEvent;
+
 #if(NFC_NXP_NOT_OPEN_INCLUDED == TRUE)
     pthread_t mThreadId;
     static ThreadCondVar mHalCoreResetCompletedEvent;

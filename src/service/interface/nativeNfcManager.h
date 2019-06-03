@@ -48,7 +48,7 @@ BOOLEAN nativeNfcManager_isNfcActive();
 ** Returns:         True if ok.
 **
 *******************************************************************************/
-INT32 nativeNfcManager_doInitialize ();
+INT32 nativeNfcManager_doInitialize (nfcInitInfo_t *pInitInfo);
 
 
 /*******************************************************************************

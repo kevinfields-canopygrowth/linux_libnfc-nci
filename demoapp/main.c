@@ -67,6 +67,7 @@ static eDevState g_DevState = eDevState_NONE;
 static eDevType g_Dev_Type = eDevType_NONE;
 static eSnepClientState g_SnepClientState = eSnepClientState_OFF;
 static eHCEState g_HCEState = eHCEState_NONE;
+static nfcInitInfo_t g_initInfo;
 static nfc_tag_info_t g_TagInfo;
 static nfcTagCallback_t g_TagCB;
 static nfcHostCardEmulationCallback_t g_HceCB;
@@ -603,7 +604,17 @@ int InitMode(int tag, int p2p, int hce)
     
     if(0x00 == res)
     {
-        res = nfcManager_doInitialize();
+        const int i2cBusLength = 20;
+        g_initInfo.pI2CBus = (char*)malloc(i2cBusLength * sizeof (char));
+        memset(g_initInfo.pI2CBus, '\0', i2cBusLength);
+        strcpy(g_initInfo.pI2CBus, "/dev/i2c-1");
+
+        g_initInfo.i2cBusLength = i2cBusLength;
+        g_initInfo.i2cAddress = 0x28;
+        g_initInfo.irq = 23;
+        g_initInfo.ven = 24;
+
+        res = nfcManager_doInitialize(&g_initInfo);
         if(0x00 != res)
         {
             printf("NfcService Init Failed\n");
@@ -2051,7 +2062,9 @@ void* ExitThread(void* pContext)
     {
         g_DevState = eDevState_EXIT;
     }
-    
+
+    free(g_initInfo.pI2CBus);
+
     framework_UnlockMutex(g_devLock);
     return NULL;
 }

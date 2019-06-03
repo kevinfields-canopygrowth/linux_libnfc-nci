@@ -425,7 +425,7 @@ static void phNxpNciHal_get_clk_freq(void)
  *                  In case of failure returns other failure value.
  *
  ******************************************************************************/
-int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p_data_cback)
+int phNxpNciHal_open(nfcInitInfo_t* pInitInfo, nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p_data_cback)
 {
     phOsalNfc_Config_t tOsalConfig;
     phTmlNfc_Config_t tTmlConfig;
@@ -460,6 +460,11 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
     memset(&tOsalConfig, 0x00, sizeof(tOsalConfig));
     memset(&tTmlConfig, 0x00, sizeof(tTmlConfig));
     memset (&nxpprofile_ctrl, 0, sizeof(phNxpNciProfile_Control_t));
+
+    tTmlConfig.pI2CBus = pInitInfo->pI2CBus;
+    tTmlConfig.i2cAddress = (uint8_t)pInitInfo->i2cAddress;
+    tTmlConfig.irq = (uint8_t)pInitInfo->irq;
+    tTmlConfig.ven = (uint8_t)pInitInfo->ven;
 
     /* By default HAL status is HAL_STATUS_OPEN */
     nxpncihal_ctrl.halStatus = HAL_STATUS_OPEN;

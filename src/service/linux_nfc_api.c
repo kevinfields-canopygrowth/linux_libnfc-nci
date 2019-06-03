@@ -159,10 +159,10 @@ int nfcTag_transceive (unsigned int handle, unsigned char *tx_buffer, int tx_buf
     return ret;
 }
 
-int nfcManager_doInitialize ()
+int nfcManager_doInitialize (nfcInitInfo_t *pInitInfo)
 {
     int ret;
-    ret = nativeNfcManager_doInitialize();
+    ret = nativeNfcManager_doInitialize(pInitInfo);
     return ret;
 }
 

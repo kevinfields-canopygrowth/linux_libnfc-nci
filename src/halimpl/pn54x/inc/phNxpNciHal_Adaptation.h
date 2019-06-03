@@ -18,10 +18,11 @@
 #define _PHNXPNCIHAL_ADAPTATION_H_
 
 #include "nfc_hal_api.h"
+#include "linux_nfc_api.h"
 
 /* NXP HAL functions */
 
-int phNxpNciHal_open(nfc_stack_callback_t *p_cback,
+int phNxpNciHal_open(nfcInitInfo_t* pInitInfo, nfc_stack_callback_t *p_cback,
         nfc_stack_data_callback_t *p_data_cback);
 int phNxpNciHal_write(uint16_t data_len, const uint8_t *p_data);
 int phNxpNciHal_core_initialized(uint8_t* p_core_init_rsp_params);
