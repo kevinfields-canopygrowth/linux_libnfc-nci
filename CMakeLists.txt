@@ -8,6 +8,7 @@ set(PACKAGE_TARNAME "${PACKAGE} ${VERSION}")
 
 project(${PACKAGE_NAME} VERSION ${PACKAGE_VERSION} LANGUAGES C CXX)
 
+option(LIBNFC_NCI_INSTALL "enable install commands for library targets and files" ON)
 option(BUILD_SHARED_LIBS "" OFF)
 option(ENABLE_LLCP1_3 "enable LLCP1.3 (secured P2P). requires OPENSSLDIR to be set." OFF)
 set(ACTIVE_TML "ALT" CACHE STRING "choose which type of TML to have enabled")
@@ -312,64 +313,71 @@ target_sources(${PROJECT_NAME} PRIVATE
     src/service/linux_nfc_factory_api.c
 )
 
-add_executable(nfcDemoApp demoapp/main.c demoapp/tools.c demoapp/tools.h)
-target_include_directories(nfcDemoApp PRIVATE demoapp)
-target_link_libraries(nfcDemoApp PRIVATE ${PROJECT_NAME})
-target_compile_options(nfcDemoApp PRIVATE -w)
-set_target_properties(nfcDemoApp PROPERTIES BUILD_WITH_INSTALL_RPATH true)
+option(INCLUDE_DEMO_APP "Adds and builds the demo application for libnfc-nci" OFF)
+if(INCLUDE_DEMO_APP)
+    add_executable(nfcDemoApp demoapp/main.c demoapp/tools.c demoapp/tools.h)
+    target_include_directories(nfcDemoApp PRIVATE demoapp)
+    target_link_libraries(nfcDemoApp PRIVATE ${PROJECT_NAME})
+    target_compile_options(nfcDemoApp PRIVATE -w)
+    set_target_properties(nfcDemoApp PROPERTIES BUILD_WITH_INSTALL_RPATH true)
+endif()
 
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
+if(LIBNFC_NCI_INSTALL)
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
 
-set(CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/)
+    set(CONFIG_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/)
 
-install(
-    TARGETS nfcDemoApp
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+    if(INCLUDE_DEMO_APP)
+        install(
+            TARGETS nfcDemoApp
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
+    endif()
 
-install(
-    TARGETS ${PROJECT_NAME}
-    EXPORT ${PROJECT_NAME}Targets
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+    install(
+        TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 
-install(
-    EXPORT ${PROJECT_NAME}Targets
-    NAMESPACE ${PROJECT_NAME}::
-    DESTINATION ${CONFIG_INSTALL_DIR}
-)
+    install(
+        EXPORT ${PROJECT_NAME}Targets
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CONFIG_INSTALL_DIR}
+    )
 
-install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/src/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING
-    PATTERN "*.h"
-)
+    install(
+        DIRECTORY ${PROJECT_SOURCE_DIR}/src/include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING
+        PATTERN "*.h"
+    )
 
-install(
-    DIRECTORY conf/
-    DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}
-    FILES_MATCHING
-    PATTERN "*.conf"
-)
+    install(
+        DIRECTORY conf/
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}
+        FILES_MATCHING
+        PATTERN "*.conf"
+    )
 
-write_basic_package_version_file(
-    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-    VERSION ${PACKAGE_VERSION}
-    COMPATIBILITY AnyNewerVersion
-)
+    write_basic_package_version_file(
+        ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        VERSION ${PACKAGE_VERSION}
+        COMPATIBILITY AnyNewerVersion
+    )
 
-configure_package_config_file(
-    ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
-    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-    INSTALL_DESTINATION ${CONFIG_INSTALL_DIR}
-)
+    configure_package_config_file(
+        ${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in
+        ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        INSTALL_DESTINATION ${CONFIG_INSTALL_DIR}
+    )
 
-install(
-    FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-    DESTINATION ${CONFIG_INSTALL_DIR}
-)
+    install(
+        FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        DESTINATION ${CONFIG_INSTALL_DIR}
+    )
+endif(LIBNFC_NCI_INSTALL)
